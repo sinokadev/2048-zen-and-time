@@ -16,7 +16,25 @@ function GameManager(size, InputManager, Actuator, ScoreManager) {
 // Restart the game
 GameManager.prototype.restart = function () {
   this.actuator.continue();
+  this.stopTimer();
   this.setup();
+};
+
+GameManager.prototype.startTimer = function () {
+  if (!this.startTime) {
+    this.startTime = new Date().getTime();
+    var self = this;
+    this.timer = setInterval(function() {
+      self.actuate();
+    }, 1);
+  }
+};
+
+GameManager.prototype.stopTimer = function () {
+  if (this.timer) {
+    clearInterval(this.timer);
+    this.timer = null;
+  }
 };
 
 // Keep playing after winning
@@ -41,6 +59,9 @@ GameManager.prototype.setup = function () {
   this.over        = false;
   this.won         = false;
   this.keepPlaying = false;
+
+  this.startTime = null;
+  this.timer = null;
 
   // Add the initial tiles
   this.addStartTiles();
@@ -74,12 +95,22 @@ GameManager.prototype.actuate = function () {
     this.scoreManager.set(this.score);
   }
 
+  var elapsedTime = 0;
+  if (this.startTime) {
+    elapsedTime = new Date().getTime() - this.startTime;
+  }
+
+  if (this.isGameTerminated()) {
+    this.stopTimer();
+  }
+
   this.actuator.actuate(this.grid, {
     score:      this.score,
     over:       this.over,
     won:        this.won,
     bestScore:  this.scoreManager.get(),
-    terminated: this.isGameTerminated()
+    terminated: this.isGameTerminated(),
+    elapsedTime: elapsedTime
   });
 
 };
@@ -105,6 +136,8 @@ GameManager.prototype.moveTile = function (tile, cell) {
 GameManager.prototype.move = function (direction) {
   // 0: up, 1: right, 2:down, 3: left
   var self = this;
+
+  this.startTimer();
 
   if (this.isGameTerminated()) return; // Don't do anything if the game's over
 

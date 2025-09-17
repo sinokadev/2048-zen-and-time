@@ -2,6 +2,7 @@ function HTMLActuator() {
   this.tileContainer    = document.querySelector(".tile-container");
   this.scoreContainer   = document.querySelector(".score-container");
   this.bestContainer    = document.querySelector(".best-container");
+  this.timerContainer   = document.querySelector(".timer-container");
   this.messageContainer = document.querySelector(".game-message");
   this.sharingContainer = document.querySelector(".score-sharing");
 
@@ -24,6 +25,7 @@ HTMLActuator.prototype.actuate = function (grid, metadata) {
 
     self.updateScore(metadata.score);
     self.updateBestScore(metadata.bestScore);
+    self.updateTimer(metadata.elapsedTime);
 
     if (metadata.terminated) {
       if (metadata.over) {
@@ -43,6 +45,7 @@ HTMLActuator.prototype.continue = function () {
   }
 
   this.clearMessage();
+  this.updateTimer(0);
 };
 
 HTMLActuator.prototype.clearContainer = function (container) {
@@ -139,6 +142,25 @@ HTMLActuator.prototype.updateScore = function (score) {
 
 HTMLActuator.prototype.updateBestScore = function (bestScore) {
   this.bestContainer.textContent = bestScore;
+};
+
+HTMLActuator.prototype.updateTimer = function (elapsedTime) {
+  if (!this.timerContainer) return;
+
+  var formattedTime = "00:00.000";
+  if (elapsedTime > 0) {
+    var date = new Date(elapsedTime);
+    var minutes = date.getUTCMinutes();
+    var seconds = date.getUTCSeconds();
+    var milliseconds = date.getUTCMilliseconds();
+
+    formattedTime = 
+      (minutes < 10 ? '0' : '') + minutes + ':' +
+      (seconds < 10 ? '0' : '') + seconds + '.' +
+      (milliseconds < 100 ? (milliseconds < 10 ? '00' : '0') : '') + milliseconds;
+  }
+
+  this.timerContainer.textContent = formattedTime;
 };
 
 HTMLActuator.prototype.message = function (won) {
